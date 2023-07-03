@@ -1,9 +1,10 @@
 {
   "kafka": {
+    "brokers": ["localhost:3000"],
     "tariff": {
       "topic": "tariff-topic",
       "groupId": "tariff-group",
-      "brokers": ["localhost:3000"]
+      "messageKey": "tariff-template-generate"
     }
   }
 }

@@ -1,25 +1,26 @@
 package config
 
 type Config struct {
-	HTTP    ConfigurationHTTP
-	Service ServiceConfiguration
+	HTTP    HTTP
+	Service Service
 }
 
-type ConfigurationHTTP struct {
+type HTTP struct {
 	Host string `env:"HTTP_HOST,default=localhost"`
 	Port string `env:"HTTP_PORT,default=8080"`
 }
 
-type ServiceConfiguration struct {
-	Kafka KafkaConfiguration `json:"kafka"`
+type Service struct {
+	Kafka Kafka `json:"kafka"`
 }
 
-type KafkaConfiguration struct {
-	Tariff TariffKafkaConfiguration `json:"tariff"`
+type Kafka struct {
+	Tariff  TariffKafka `json:"tariff"`
+	Brokers []string    `json:"brokers"`
 }
 
-type TariffKafkaConfiguration struct {
-	Topic   string   `json:"topic"`
-	GroupID string   `json:"groupId"`
-	Brokers []string `json:"brokers"`
+type TariffKafka struct {
+	Topic      string `json:"topic"`
+	GroupID    string `json:"groupId"`
+	MessageKey string `json:"messageKey"`
 }

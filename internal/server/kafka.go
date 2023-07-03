@@ -1,4 +1,4 @@
-package admin
+package server
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
-type Deps struct {
+type DepsKafka struct {
 	Logger  *zap.Logger
 	Brokers []string
 }
@@ -19,7 +19,7 @@ type Kafka struct {
 	client *kadm.Client
 }
 
-func New(deps *Deps) (*Kafka, error) {
+func NewKafka(deps *DepsKafka) (*Kafka, error) {
 	clientKGO, err := kgo.NewClient(kgo.SeedBrokers(deps.Brokers...))
 	if err != nil {
 		return nil, err
@@ -47,25 +47,37 @@ func (receiver *Kafka) TopicExists(ctx context.Context, topic string) bool {
 	return false
 }
 
-func (receiver *Kafka) CreateTopic(ctx context.Context, topic string) bool {
+func (receiver *Kafka) CreateTopic(ctx context.Context, topic string) error {
 	responses, err := receiver.client.CreateTopics(ctx, 1, 1, nil, topic)
 	if err != nil {
 		receiver.logger.Error("failed to create topic on <CreateTopic> of <AdminService>")
-		return false
+		return err
 	}
 
 	for _, response := range responses {
 		if response.Err != nil {
 			receiver.logger.Error(fmt.Sprintf("Unable to create topic '%s': %s", response.Topic, response.Err))
-			return false
+			return err
 		}
 
 		receiver.logger.Info(fmt.Sprintf("Created topic '%s'\n", response.Topic))
 	}
 
-	return true
+	return nil
 }
 
-func (receiver *Kafka) Close() {
+func (receiver *Kafka) Close(_ context.Context) error {
 	receiver.client.Close()
+
+	return nil
+}
+
+func (receiver *Kafka) Initialize(ctx context.Context, topic string) error {
+	if !receiver.TopicExists(ctx, topic) {
+		if err := receiver.CreateTopic(ctx, topic); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
