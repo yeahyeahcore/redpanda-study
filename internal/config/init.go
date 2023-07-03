@@ -11,10 +11,12 @@ func Initialize(pathJSON, pathENV string) (*Config, error) {
 		return nil, err
 	}
 
-	config, err = json.Read[Config](pathJSON)
+	serviceConfig, err := json.Read[Service](pathJSON)
 	if err != nil {
 		return nil, err
 	}
+
+	config.Service = *serviceConfig
 
 	return config, nil
 }

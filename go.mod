@@ -3,6 +3,7 @@ module github.com/yeahyeahcore/redpanda-study
 go 1.20
 
 require (
+	github.com/davecgh/go-spew v1.1.1
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.10.2
 	github.com/sethvargo/go-envconfig v0.9.0

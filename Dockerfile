@@ -18,6 +18,7 @@ RUN GRPC_HEALTH_PROBE_VERSION=v0.4.6 && \
 WORKDIR /app
 # Copy go.mod
 ADD go.mod go.sum /app/
+ADD config.dev.json /app/
 # Download go depences
 RUN go mod download
 # Copy all local files
@@ -37,6 +38,8 @@ ENV GO111MODULE=off
 WORKDIR /app
 # Copy build file
 COPY --from=build /app/bin/app ./app
+# Copy configuration file
+COPY --from=build /app/config.dev.json ./
 # CMD
 CMD [ "./app" ]
 
@@ -64,6 +67,8 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /app
 # Copy build file
 COPY --from=build /app/bin/app ./app
+# Copy configuration file
+COPY --from=build /app/config.dev.json ./
 # Copy grpc health probe dir
 COPY --from=build /bin/grpc_health_probe /bin/grpc_health_probe
 # Install migrate tool

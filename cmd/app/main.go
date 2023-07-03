@@ -14,7 +14,7 @@ func main() {
 		log.Fatalf("failed to init zap logger: %v", err)
 	}
 
-	config, err := config.Initialize("config.dev.json", ".env.test")
+	config, err := config.Initialize("./config.dev.json", "")
 	if err != nil {
 		logger.Fatal("failed to init config", zap.Error(err))
 	}

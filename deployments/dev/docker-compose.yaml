@@ -1,12 +1,17 @@
 version: '3.7'
+
 name: redpanda-owl-shop
+
 networks:
   redpanda_network:
     driver: bridge
+
 volumes:
   redpanda: null
+
 services:
   redpanda:
+    tty: true
     image: docker.redpanda.com/redpandadata/redpanda:v23.1.13
     command:
       - redpanda start
@@ -43,6 +48,7 @@ services:
       start_period: 5s
 
   console:
+    tty: true
     image: docker.redpanda.com/redpandadata/console:v2.2.4
     entrypoint: /bin/sh
     command: -c "echo \"$$CONSOLE_CONFIG_FILE\" > /tmp/config.yml; /app/console"
@@ -71,6 +77,7 @@ services:
       - redpanda
 
   connect:
+    tty: true
     image: docker.redpanda.com/redpandadata/connectors:latest
     hostname: connect
     container_name: connect
@@ -100,22 +107,19 @@ services:
       CONNECT_HEAP_OPTS: -Xms512M -Xmx512M
       CONNECT_LOG_LEVEL: info
 
-  owl-shop:
-    image: quay.io/cloudhut/owl-shop:sha-042112b
-    networks:
-      - redpanda_network
-    # platform: 'linux/amd64'
-    entrypoint: /bin/sh
-    command: -c "echo \"$$OWLSHOP_CONFIG_FILE\" > /tmp/config.yml; /app/owlshop"
+  study-app:
+    container_name: study-app-container
+    tty: true
+    build:
+      context: ../../.
+      dockerfile: Dockerfile
+      target: test
     environment:
-      CONFIG_FILEPATH: /tmp/config.yml
-      OWLSHOP_CONFIG_FILE: |
-        shop:
-          requestRate: 1
-          interval: 0.1s
-          topicReplicationFactor: 1
-          topicPartitionCount: 1
-        kafka:
-          brokers: "redpanda:9092"
+      - HTTP_HOST=0.0.0.0
+      - HTTP_PORT=8000
+    ports:
+      - 8000:8000
     depends_on:
       - redpanda
+    networks:
+      - redpanda_network

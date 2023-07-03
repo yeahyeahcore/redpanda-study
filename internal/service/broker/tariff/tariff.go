@@ -29,7 +29,9 @@ type Service struct {
 
 func New(deps Deps) *Service {
 	return &Service{
-		logger: deps.Logger,
+		logger:   deps.Logger,
+		consumer: deps.Consumer,
+		producer: deps.Producer,
 	}
 }
 

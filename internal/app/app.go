@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os/signal"
 	"syscall"
 	"time"
@@ -51,7 +50,10 @@ func Run(config *config.Config, logger *zap.Logger) (appErr error) {
 		Services: *services,
 	})
 
-	controllers := initialize.NewControllers(initialize.ControllersDeps{Logger: logger})
+	controllers := initialize.NewControllers(initialize.ControllersDeps{
+		Logger:   logger,
+		Services: *services,
+	})
 
 	serverHTTP := server.NewHTTP(server.DepsHTTP{Logger: logger})
 
@@ -83,7 +85,8 @@ func Run(config *config.Config, logger *zap.Logger) (appErr error) {
 	defer cancel()
 
 	if err := closer.Close(shutdownCtx); err != nil {
-		return fmt.Errorf("closer: %w", err)
+		logger.Error("closer error", zap.Error(err))
+		return err
 	}
 
 	return nil

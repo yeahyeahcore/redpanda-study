@@ -71,7 +71,7 @@ func (receiver *HTTP) Stop(ctx context.Context) error {
 func (receiver *HTTP) Register(controllers *initialize.Controllers) *HTTP {
 	groupAmocrm := receiver.echo.Group("/broker")
 
-	groupAmocrm.POST("/", controllers.Broker.Send)
+	groupAmocrm.POST("", controllers.Broker.Send)
 
 	return receiver
 }

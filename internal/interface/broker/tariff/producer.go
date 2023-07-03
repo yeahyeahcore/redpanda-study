@@ -44,11 +44,18 @@ func (receiver *Producer) Send(ctx context.Context, tariff *models.Tariff) error
 		return err
 	}
 
-	receiver.client.Produce(ctx, &kgo.Record{
+	responses := receiver.client.ProduceSync(ctx, &kgo.Record{
 		Key:   []byte(receiver.messageKey),
 		Topic: receiver.topic,
 		Value: bytes,
-	}, nil)
+	})
+
+	for _, response := range responses {
+		if response.Err != nil {
+			receiver.logger.Error("unable send tariff on <Send> of <TariffProducer>", zap.Error(response.Err))
+			return err
+		}
+	}
 
 	return nil
 }

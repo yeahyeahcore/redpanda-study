@@ -2,9 +2,9 @@ package tariff
 
 import (
 	"context"
-	"fmt"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/yeahyeahcore/redpanda-study/internal/models"
 	"go.uber.org/zap"
 )
@@ -38,21 +38,19 @@ func (receiver *Worker) Run(ctx context.Context) {
 		}
 	}()
 
-	timer := time.NewTimer(1 * time.Second)
+	ticker := time.NewTicker(5 * time.Second)
 
 	for {
 		select {
 		case <-ctx.Done():
 			receiver.logger.Info("read tariff messages closed")
 			return
-		case <-timer.C:
-			privileges := receiver.tariffBrokerService.Read(ctx)
+		case <-ticker.C:
+			tariffCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+			privileges := receiver.tariffBrokerService.Read(tariffCtx)
 
-			for _, privilege := range privileges {
-				fmt.Println(privilege)
-			}
-		default:
-			time.Sleep(1 * time.Second)
+			cancel()
+			spew.Dump(privileges)
 		}
 	}
 }

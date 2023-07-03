@@ -5,24 +5,23 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/yeahyeahcore/redpanda-study/internal/interface/controller/broker/dto"
 	"github.com/yeahyeahcore/redpanda-study/internal/models"
 	"github.com/yeahyeahcore/redpanda-study/pkg/echotools"
 	"go.uber.org/zap"
 )
 
-type TariffBrokerService interface {
-	Send(context.Context, []models.Privilege) error
+type tariffBrokerService interface {
+	Send(context.Context, *models.Tariff) error
 }
 
 type Deps struct {
 	Logger              *zap.Logger
-	TariffBrokerService TariffBrokerService
+	TariffBrokerService tariffBrokerService
 }
 
 type Controller struct {
 	logger              *zap.Logger
-	tariffBrokerService TariffBrokerService
+	tariffBrokerService tariffBrokerService
 }
 
 func New(deps Deps) *Controller {
@@ -33,13 +32,13 @@ func New(deps Deps) *Controller {
 }
 
 func (receiver *Controller) Send(ctx echo.Context) error {
-	request, err := echotools.Bind[dto.Tariff](ctx)
+	request, err := echotools.Bind[models.Tariff](ctx)
 	if err != nil {
 		receiver.logger.Error("failed to parse request body on <Send> of <BrokerController>", zap.Error(err))
 		return ctx.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	if err := receiver.tariffBrokerService.Send(ctx.Request().Context(), request.Privileges); err != nil {
+	if err := receiver.tariffBrokerService.Send(ctx.Request().Context(), request); err != nil {
 		receiver.logger.Error("failed to send privileges on <Send> of <BrokerController>", zap.Error(err))
 		return ctx.JSON(http.StatusInternalServerError, err.Error())
 	}

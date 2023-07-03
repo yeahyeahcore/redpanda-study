@@ -72,15 +72,16 @@ func (receiver *Kafka) Close(_ context.Context) error {
 
 func (receiver *Kafka) Initialize(ctx context.Context, topics []string) {
 	for _, topic := range topics {
-		if !receiver.TopicExists(ctx, topic) {
-			if err := receiver.CreateTopic(ctx, topic); err != nil {
-				receiver.logger.Error(fmt.Sprintf("failed to create topic <%s>", topic))
-				continue
-			}
-
-			receiver.logger.Info(fmt.Sprintf("сreated topic <%s>", topic))
+		if receiver.TopicExists(ctx, topic) {
+			receiver.logger.Info(fmt.Sprintf("topic <%s> already exist", topic))
+			continue
 		}
 
-		receiver.logger.Info(fmt.Sprintf("topic <%s> already exist", topic))
+		if err := receiver.CreateTopic(ctx, topic); err != nil {
+			receiver.logger.Error(fmt.Sprintf("failed to create topic <%s>", topic))
+			continue
+		}
+
+		receiver.logger.Info(fmt.Sprintf("сreated topic <%s>", topic))
 	}
 }

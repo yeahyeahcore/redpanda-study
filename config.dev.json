@@ -1,6 +1,6 @@
 {
   "kafka": {
-    "brokers": ["localhost:3000"],
+    "brokers": ["redpanda:9092"],
     "tariff": {
       "topic": "tariff-topic",
       "groupId": "tariff-group",

@@ -6,7 +6,8 @@ import (
 )
 
 type ControllersDeps struct {
-	Logger *zap.Logger
+	Logger   *zap.Logger
+	Services Services
 }
 
 type Controllers struct {
@@ -17,7 +18,7 @@ func NewControllers(deps ControllersDeps) *Controllers {
 	return &Controllers{
 		Broker: broker.New(broker.Deps{
 			Logger:              deps.Logger,
-			TariffBrokerService: nil,
+			TariffBrokerService: deps.Services.TariffBrokerService,
 		}),
 	}
 }
