@@ -45,7 +45,7 @@ func NewConsumer(deps ConsumerDeps) (*Consumer, error) {
 	}, nil
 }
 
-func (receiver *Consumer) FetchMessages(ctx context.Context) []models.Privilege {
+func (receiver *Consumer) FetchPrivileges(ctx context.Context) []models.Privilege {
 	fetches := receiver.client.PollFetches(ctx)
 	iter := fetches.RecordIter()
 

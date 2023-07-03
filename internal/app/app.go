@@ -11,6 +11,7 @@ import (
 	"github.com/yeahyeahcore/redpanda-study/internal/config"
 	"github.com/yeahyeahcore/redpanda-study/internal/initialize"
 	"github.com/yeahyeahcore/redpanda-study/internal/server"
+	"github.com/yeahyeahcore/redpanda-study/internal/worker"
 	"github.com/yeahyeahcore/redpanda-study/pkg/closer"
 	"go.uber.org/zap"
 )
@@ -27,11 +28,31 @@ func Run(config *config.Config, logger *zap.Logger) (appErr error) {
 		}
 	}()
 
+	closer := closer.New()
+
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
-	closer := closer.New()
+	kafka, err := initialize.NewKafka(initialize.KafkaDeps{
+		Logger: logger,
+		Config: config.Service.Kafka,
+	})
+	if err != nil {
+		return err
+	}
+
+	services := initialize.NewServices(initialize.ServicesDeps{
+		Logger: logger,
+		Kafka:  *kafka,
+	})
+
+	workers := initialize.NewWorkers(initialize.WorkersDeps{
+		Logger:   logger,
+		Services: *services,
+	})
+
 	controllers := initialize.NewControllers(initialize.ControllersDeps{Logger: logger})
+
 	serverHTTP := server.NewHTTP(server.DepsHTTP{Logger: logger})
 
 	serverKafka, kafkaErr := server.NewKafka(&server.DepsKafka{
@@ -46,9 +67,12 @@ func Run(config *config.Config, logger *zap.Logger) (appErr error) {
 
 	go serverHTTP.Run(&config.HTTP)
 	go serverKafka.Initialize(ctx, []string{config.Service.Kafka.Tariff.Topic})
+	go worker.Run(ctx, workers)
 
 	closer.Add(serverHTTP.Stop)
 	closer.Add(serverKafka.Close)
+	closer.Add(kafka.TariffConsumer.Close)
+	closer.Add(kafka.TariffProducer.Close)
 
 	<-ctx.Done()
 
