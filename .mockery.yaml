@@ -1,0 +1,6 @@
+exported: True
+inpackage: False
+keeptree: True
+case: underscore
+with-expecter: True
+inpackage-suffix: True

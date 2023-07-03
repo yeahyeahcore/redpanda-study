@@ -1,0 +1,8 @@
+.mockery.yaml
+.golangci.yaml
+.gitlab-ci.yaml
+.gitingore
+.Makefile
+.README.md
+deployments
+tests
