@@ -23,7 +23,7 @@ type HTTP struct {
 	echo   *echo.Echo
 }
 
-func NewHTTP(deps DepsHTTP) (*HTTP, error) {
+func NewHTTP(deps DepsHTTP) *HTTP {
 	echo := echo.New()
 
 	echo.Use(middleware.Recover())
@@ -38,7 +38,7 @@ func NewHTTP(deps DepsHTTP) (*HTTP, error) {
 			WriteTimeout:   20 * time.Second,
 			IdleTimeout:    20 * time.Second,
 		},
-	}, nil
+	}
 }
 
 func (receiver *HTTP) Listen(address string) error {

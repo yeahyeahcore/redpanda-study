@@ -56,11 +56,9 @@ func (receiver *Kafka) CreateTopic(ctx context.Context, topic string) error {
 
 	for _, response := range responses {
 		if response.Err != nil {
-			receiver.logger.Error(fmt.Sprintf("Unable to create topic '%s': %s", response.Topic, response.Err))
+			receiver.logger.Error(fmt.Sprintf("unable to create topic '%s': %s", response.Topic, response.Err))
 			return err
 		}
-
-		receiver.logger.Info(fmt.Sprintf("Created topic '%s'\n", response.Topic))
 	}
 
 	return nil
@@ -72,12 +70,17 @@ func (receiver *Kafka) Close(_ context.Context) error {
 	return nil
 }
 
-func (receiver *Kafka) Initialize(ctx context.Context, topic string) error {
-	if !receiver.TopicExists(ctx, topic) {
-		if err := receiver.CreateTopic(ctx, topic); err != nil {
-			return err
-		}
-	}
+func (receiver *Kafka) Initialize(ctx context.Context, topics []string) {
+	for _, topic := range topics {
+		if !receiver.TopicExists(ctx, topic) {
+			if err := receiver.CreateTopic(ctx, topic); err != nil {
+				receiver.logger.Error(fmt.Sprintf("failed to create topic <%s>", topic))
+				continue
+			}
 
-	return nil
+			receiver.logger.Info(fmt.Sprintf("сreated topic <%s>", topic))
+		}
+
+		receiver.logger.Info(fmt.Sprintf("topic <%s> already exist", topic))
+	}
 }

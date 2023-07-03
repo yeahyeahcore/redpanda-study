@@ -2,11 +2,12 @@ package tariff
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/twmb/franz-go/pkg/kgo"
-	"github.com/yeahyeahcore/redpanda-study/internal/interface/broker/tariff/dto"
+	"github.com/yeahyeahcore/redpanda-study/internal/models"
+	"github.com/yeahyeahcore/redpanda-study/internal/utils/transfer"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/proto"
 )
 
 type ProducerDeps struct {
@@ -37,8 +38,8 @@ func NewProducer(deps ProducerDeps) (*Producer, error) {
 	}, nil
 }
 
-func (receiver *Producer) SendMessage(ctx context.Context, message *dto.Message) error {
-	bytes, err := json.Marshal(message)
+func (receiver *Producer) Send(ctx context.Context, tariff *models.Tariff) error {
+	bytes, err := proto.Marshal(transfer.TariffModelToProto(tariff))
 	if err != nil {
 		return err
 	}

@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package tariff;
+
+option go_package = "./tariff";
+
+message Privilege {
+  string PrivilegeID = 1;
+	string ServiceKey = 2;
+	string Type = 3;
+	string Value = 4;
+}
+
+message Tariff {
+  repeated Privilege Privileges = 1;
+}

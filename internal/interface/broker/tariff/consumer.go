@@ -5,10 +5,11 @@ import (
 	"fmt"
 
 	"github.com/twmb/franz-go/pkg/kgo"
-	"github.com/yeahyeahcore/redpanda-study/internal/interface/broker/tariff/dto"
 	"github.com/yeahyeahcore/redpanda-study/internal/models"
-	"github.com/yeahyeahcore/redpanda-study/pkg/json"
+	"github.com/yeahyeahcore/redpanda-study/internal/proto/tariff"
+	"github.com/yeahyeahcore/redpanda-study/internal/utils/transfer"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/proto"
 )
 
 type ConsumerDeps struct {
@@ -48,28 +49,28 @@ func (receiver *Consumer) FetchMessages(ctx context.Context) []models.Privilege 
 	fetches := receiver.client.PollFetches(ctx)
 	iter := fetches.RecordIter()
 
-	messages := make([]dto.Message, 0)
-	privilegies := make([]models.Privilege, 0)
+	tariffs := make([]models.Tariff, 0)
+	privileges := make([]models.Privilege, 0)
 
 	for !iter.Done() {
 		record := iter.Next()
+		tariff := tariff.Tariff{}
 
 		fmt.Println(string(record.Key))
 
-		message, err := json.Unmarshal[dto.Message](record.Value)
-		if err != nil {
+		if err := proto.Unmarshal(record.Value, &tariff); err != nil {
 			receiver.logger.Error(fmt.Sprintf("error decoding message: %v\n", err))
 			continue
 		}
 
-		messages = append(messages, *message)
+		tariffs = append(tariffs, *transfer.TariffProtoToModel(&tariff))
 	}
 
-	for _, message := range messages {
-		privilegies = append(privilegies, message.PrivilegeArray...)
+	for _, tariff := range tariffs {
+		privileges = append(privileges, tariff.Privileges...)
 	}
 
-	return privilegies
+	return privileges
 }
 
 func (receiver *Consumer) Close(_ context.Context) error {

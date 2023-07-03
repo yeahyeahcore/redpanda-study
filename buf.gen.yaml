@@ -1,0 +1,8 @@
+version: v1
+plugins:
+  - name: go
+    out: internal/proto
+  - name: go-grpc
+    out: internal/proto
+    opt:
+      - require_unimplemented_servers=false

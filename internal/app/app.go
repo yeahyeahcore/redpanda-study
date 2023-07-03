@@ -31,15 +31,8 @@ func Run(config *config.Config, logger *zap.Logger) (appErr error) {
 	defer cancel()
 
 	closer := closer.New()
-
 	controllers := initialize.NewControllers(initialize.ControllersDeps{Logger: logger})
-
-	serverHTTP, httpErr := server.NewHTTP(server.DepsHTTP{
-		Logger: logger,
-	})
-	if httpErr != nil {
-		return httpErr
-	}
+	serverHTTP := server.NewHTTP(server.DepsHTTP{Logger: logger})
 
 	serverKafka, kafkaErr := server.NewKafka(&server.DepsKafka{
 		Logger:  logger,
@@ -52,7 +45,7 @@ func Run(config *config.Config, logger *zap.Logger) (appErr error) {
 	serverHTTP.Register(controllers)
 
 	go serverHTTP.Run(&config.HTTP)
-	go serverKafka.Initialize(ctx, config.Service.Kafka.Tariff.Topic)
+	go serverKafka.Initialize(ctx, []string{config.Service.Kafka.Tariff.Topic})
 
 	closer.Add(serverHTTP.Stop)
 	closer.Add(serverKafka.Close)
@@ -70,5 +63,4 @@ func Run(config *config.Config, logger *zap.Logger) (appErr error) {
 	}
 
 	return nil
-
 }
