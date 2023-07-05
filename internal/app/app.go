@@ -43,8 +43,9 @@ func Run(config *config.Config, logger *zap.Logger) (appErr error) {
 	kafkaTariffClient, err := kgo.NewClient(
 		kgo.SeedBrokers(config.Service.Kafka.Brokers...),
 		kgo.ConsumerGroup(config.Service.Kafka.ConsumerGroupID),
-		kgo.ConsumeTopics(config.Service.Kafka.Tariff.Topic),
 		kgo.ConsumeResetOffset(kgo.NewOffset().AtStart()),
+		kgo.DefaultProduceTopic(config.Service.Kafka.Tariff.Topic),
+		kgo.ConsumeTopics(config.Service.Kafka.Tariff.Topic),
 	)
 	if err != nil {
 		return err

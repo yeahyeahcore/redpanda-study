@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/yeahyeahcore/redpanda-study/internal/app"
 	"github.com/yeahyeahcore/redpanda-study/internal/config"
 	"go.uber.org/zap"
@@ -18,6 +19,8 @@ func main() {
 	if err != nil {
 		logger.Fatal("failed to init config", zap.Error(err))
 	}
+
+	spew.Dump(config)
 
 	if err := app.Run(config, logger); err != nil {
 		logger.Fatal("failed to run app", zap.Error(err))

@@ -20,19 +20,19 @@ func New(deps Deps) *Kafka {
 	return &Kafka{client: deps.Client}
 }
 
-func (receiver *Kafka) TopicExists(ctx context.Context, topic string) bool {
+func (receiver *Kafka) TopicExists(ctx context.Context, topic string) (bool, error) {
 	topicsMetadata, err := receiver.client.ListTopics(ctx)
 	if err != nil {
-		return false
+		return false, err
 	}
 
 	for _, metadata := range topicsMetadata {
 		if metadata.Topic == topic {
-			return true
+			return true, nil
 		}
 	}
 
-	return false
+	return false, nil
 }
 
 func (receiver *Kafka) CreateTopic(ctx context.Context, topic string) error {
@@ -64,7 +64,13 @@ func Initialize(ctx context.Context, brokers, topics []string) error {
 	kafka := New(Deps{Client: kadm.NewClient(kafkaAdminClient)})
 
 	for _, topic := range topics {
-		if kafka.TopicExists(ctx, topic) {
+		isExist, err := kafka.TopicExists(ctx, topic)
+		if err != nil {
+			lastInitializeErr = err
+			continue
+		}
+
+		if isExist {
 			continue
 		}
 

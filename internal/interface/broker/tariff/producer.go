@@ -13,17 +13,20 @@ import (
 type ProducerDeps struct {
 	Logger *zap.Logger
 	Client *kgo.Client
+	Topic  string
 }
 
 type Producer struct {
 	logger *zap.Logger
 	client *kgo.Client
+	topic  string
 }
 
 func NewProducer(deps ProducerDeps) *Producer {
 	return &Producer{
 		logger: deps.Logger,
 		client: deps.Client,
+		topic:  deps.Topic,
 	}
 }
 
@@ -33,7 +36,9 @@ func (receiver *Producer) Send(ctx context.Context, tariff *models.Tariff) error
 		return err
 	}
 
-	responses := receiver.client.ProduceSync(ctx, &kgo.Record{Value: bytes})
+	responses := receiver.client.ProduceSync(ctx, &kgo.Record{
+		Value: bytes,
+	})
 
 	for _, response := range responses {
 		if response.Err != nil {
