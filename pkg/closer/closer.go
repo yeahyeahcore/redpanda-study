@@ -8,6 +8,7 @@ import (
 )
 
 type Callback func(ctx context.Context) error
+type EasyCallback func()
 
 type Closer struct {
 	mutex     sync.Mutex
@@ -46,5 +47,13 @@ func (receiver *Closer) Close(ctx context.Context) error {
 		return nil
 	case <-ctx.Done():
 		return fmt.Errorf("shutdown cancelled: %v", ctx.Err())
+	}
+}
+
+func Wrap(callback EasyCallback) Callback {
+	return func(_ context.Context) error {
+		callback()
+
+		return nil
 	}
 }

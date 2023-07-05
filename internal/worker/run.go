@@ -7,5 +7,5 @@ import (
 )
 
 func Run(ctx context.Context, workers *initialize.Workers) {
-	go workers.TariffBrokerWorker.Run(ctx)
+	go workers.TariffBroker.Run(ctx)
 }

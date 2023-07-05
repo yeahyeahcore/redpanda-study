@@ -7,11 +7,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/twmb/franz-go/pkg/kgo"
 	"github.com/yeahyeahcore/redpanda-study/internal/config"
 	"github.com/yeahyeahcore/redpanda-study/internal/initialize"
 	"github.com/yeahyeahcore/redpanda-study/internal/server"
 	"github.com/yeahyeahcore/redpanda-study/internal/worker"
 	"github.com/yeahyeahcore/redpanda-study/pkg/closer"
+	"github.com/yeahyeahcore/redpanda-study/pkg/kafka"
 	"go.uber.org/zap"
 )
 
@@ -27,22 +29,35 @@ func Run(config *config.Config, logger *zap.Logger) (appErr error) {
 		}
 	}()
 
-	closer := closer.New()
+	closerUtil := closer.New()
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
-	kafka, err := initialize.NewKafka(initialize.KafkaDeps{
-		Logger: logger,
-		Config: config.Service.Kafka,
-	})
+	if err := kafka.Initialize(ctx, config.Service.Kafka.Brokers, []string{
+		config.Service.Kafka.Tariff.Topic,
+	}); err != nil {
+		return err
+	}
+
+	kafkaTariffClient, err := kgo.NewClient(
+		kgo.SeedBrokers(config.Service.Kafka.Brokers...),
+		kgo.ConsumerGroup(config.Service.Kafka.ConsumerGroupID),
+		kgo.ConsumeTopics(config.Service.Kafka.Tariff.Topic),
+		kgo.ConsumeResetOffset(kgo.NewOffset().AtStart()),
+	)
 	if err != nil {
 		return err
 	}
 
+	brokers := initialize.NewBrokers(initialize.BrokersDeps{
+		Logger:       logger,
+		TariffClient: kafkaTariffClient,
+	})
+
 	services := initialize.NewServices(initialize.ServicesDeps{
-		Logger: logger,
-		Kafka:  *kafka,
+		Logger:  logger,
+		Brokers: *brokers,
 	})
 
 	workers := initialize.NewWorkers(initialize.WorkersDeps{
@@ -55,26 +70,17 @@ func Run(config *config.Config, logger *zap.Logger) (appErr error) {
 		Services: *services,
 	})
 
-	serverHTTP := server.NewHTTP(server.DepsHTTP{Logger: logger})
-
-	serverKafka, kafkaErr := server.NewKafka(&server.DepsKafka{
-		Logger:  logger,
-		Brokers: config.Service.Kafka.Brokers,
+	serverHTTP := server.NewHTTP(server.DepsHTTP{
+		Logger: logger,
 	})
-	if kafkaErr != nil {
-		return kafkaErr
-	}
 
 	serverHTTP.Register(controllers)
 
 	go serverHTTP.Run(&config.HTTP)
-	go serverKafka.Initialize(ctx, []string{config.Service.Kafka.Tariff.Topic})
 	go worker.Run(ctx, workers)
 
-	closer.Add(serverHTTP.Stop)
-	closer.Add(serverKafka.Close)
-	closer.Add(kafka.TariffConsumer.Close)
-	closer.Add(kafka.TariffProducer.Close)
+	closerUtil.Add(serverHTTP.Stop)
+	closerUtil.Add(closer.Wrap(kafkaTariffClient.Close))
 
 	<-ctx.Done()
 
@@ -84,7 +90,7 @@ func Run(config *config.Config, logger *zap.Logger) (appErr error) {
 
 	defer cancel()
 
-	if err := closer.Close(shutdownCtx); err != nil {
+	if err := closerUtil.Close(shutdownCtx); err != nil {
 		logger.Error("closer error", zap.Error(err))
 		return err
 	}

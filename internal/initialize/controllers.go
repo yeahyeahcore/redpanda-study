@@ -18,7 +18,7 @@ func NewControllers(deps ControllersDeps) *Controllers {
 	return &Controllers{
 		Broker: broker.New(broker.Deps{
 			Logger:              deps.Logger,
-			TariffBrokerService: deps.Services.TariffBrokerService,
+			TariffBrokerService: deps.Services.TariffBroker,
 		}),
 	}
 }

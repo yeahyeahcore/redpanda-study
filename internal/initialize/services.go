@@ -6,20 +6,20 @@ import (
 )
 
 type ServicesDeps struct {
-	Logger *zap.Logger
-	Kafka  Kafka
+	Logger  *zap.Logger
+	Brokers Brokers
 }
 
 type Services struct {
-	TariffBrokerService *tariff.Service
+	TariffBroker *tariff.Service
 }
 
 func NewServices(deps ServicesDeps) *Services {
 	return &Services{
-		TariffBrokerService: tariff.New(tariff.Deps{
+		TariffBroker: tariff.New(tariff.Deps{
 			Logger:   deps.Logger,
-			Consumer: deps.Kafka.TariffConsumer,
-			Producer: deps.Kafka.TariffProducer,
+			Consumer: deps.Brokers.TariffConsumer,
+			Producer: deps.Brokers.TariffProducer,
 		}),
 	}
 }

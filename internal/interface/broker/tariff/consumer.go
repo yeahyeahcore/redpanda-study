@@ -13,36 +13,20 @@ import (
 )
 
 type ConsumerDeps struct {
-	Logger     *zap.Logger
-	Brokers    []string
-	Topic      string
-	GroupID    string
-	MessageKey string
+	Logger *zap.Logger
+	Client *kgo.Client
 }
 
 type Consumer struct {
-	logger     *zap.Logger
-	client     *kgo.Client
-	topic      string
-	messageKey string
+	logger *zap.Logger
+	client *kgo.Client
 }
 
-func NewConsumer(deps ConsumerDeps) (*Consumer, error) {
-	client, err := kgo.NewClient(
-		kgo.SeedBrokers(deps.Brokers...),
-		kgo.ConsumerGroup(deps.GroupID),
-		kgo.ConsumeTopics(deps.Topic),
-		kgo.ConsumeResetOffset(kgo.NewOffset().AtStart()),
-	)
-	if err != nil {
-		return nil, err
-	}
-
+func NewConsumer(deps ConsumerDeps) *Consumer {
 	return &Consumer{
-		client:     client,
-		topic:      deps.Topic,
-		messageKey: deps.MessageKey,
-	}, nil
+		logger: deps.Logger,
+		client: deps.Client,
+	}
 }
 
 func (receiver *Consumer) FetchPrivileges(ctx context.Context) []models.Privilege {
@@ -55,8 +39,6 @@ func (receiver *Consumer) FetchPrivileges(ctx context.Context) []models.Privileg
 	for !iter.Done() {
 		record := iter.Next()
 		tariff := tariff.Tariff{}
-
-		fmt.Println(string(record.Key))
 
 		if err := proto.Unmarshal(record.Value, &tariff); err != nil {
 			receiver.logger.Error(fmt.Sprintf("error decoding message: %v\n", err))
@@ -71,10 +53,4 @@ func (receiver *Consumer) FetchPrivileges(ctx context.Context) []models.Privileg
 	}
 
 	return privileges
-}
-
-func (receiver *Consumer) Close(_ context.Context) error {
-	receiver.client.Close()
-
-	return nil
 }

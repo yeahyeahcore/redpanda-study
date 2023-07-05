@@ -1,10 +1,9 @@
 {
   "kafka": {
     "brokers": ["redpanda:9092"],
+    "consumerGroupId": "redpanda-study-group",
     "tariff": {
-      "topic": "tariff-topic",
-      "groupId": "tariff-group",
-      "messageKey": "tariff-template-generate"
+      "topic": "tariff-topic"
     }
   }
 }

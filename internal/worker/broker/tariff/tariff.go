@@ -14,7 +14,7 @@ type tariffBrokerService interface {
 	Read(context.Context) []models.Privilege
 }
 
-type WorkerDeps struct {
+type Deps struct {
 	Logger              *zap.Logger
 	TariffBrokerService tariffBrokerService
 }
@@ -24,7 +24,7 @@ type Worker struct {
 	tariffBrokerService tariffBrokerService
 }
 
-func New(deps WorkerDeps) *Worker {
+func New(deps Deps) *Worker {
 	return &Worker{
 		logger:              deps.Logger,
 		tariffBrokerService: deps.TariffBrokerService,

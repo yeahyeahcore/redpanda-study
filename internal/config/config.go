@@ -15,12 +15,11 @@ type Service struct {
 }
 
 type Kafka struct {
-	Tariff  TariffKafka `json:"tariff"`
-	Brokers []string    `json:"brokers"`
+	Tariff          TariffKafka `json:"tariff"`
+	Brokers         []string    `json:"brokers"`
+	ConsumerGroupID string      `json:"consumerGroupId"`
 }
 
 type TariffKafka struct {
-	Topic      string `json:"topic"`
-	GroupID    string `json:"groupId"`
-	MessageKey string `json:"messageKey"`
+	Topic string `json:"topic"`
 }

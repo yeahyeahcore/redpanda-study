@@ -11,31 +11,20 @@ import (
 )
 
 type ProducerDeps struct {
-	Logger     *zap.Logger
-	Brokers    []string
-	Topic      string
-	MessageKey string
+	Logger *zap.Logger
+	Client *kgo.Client
 }
 
 type Producer struct {
-	logger     *zap.Logger
-	client     *kgo.Client
-	topic      string
-	messageKey string
+	logger *zap.Logger
+	client *kgo.Client
 }
 
-func NewProducer(deps ProducerDeps) (*Producer, error) {
-	client, err := kgo.NewClient(kgo.SeedBrokers(deps.Brokers...))
-	if err != nil {
-		return nil, err
-	}
-
+func NewProducer(deps ProducerDeps) *Producer {
 	return &Producer{
-		logger:     deps.Logger,
-		client:     client,
-		topic:      deps.Topic,
-		messageKey: deps.MessageKey,
-	}, nil
+		logger: deps.Logger,
+		client: deps.Client,
+	}
 }
 
 func (receiver *Producer) Send(ctx context.Context, tariff *models.Tariff) error {
@@ -44,11 +33,7 @@ func (receiver *Producer) Send(ctx context.Context, tariff *models.Tariff) error
 		return err
 	}
 
-	responses := receiver.client.ProduceSync(ctx, &kgo.Record{
-		Key:   []byte(receiver.messageKey),
-		Topic: receiver.topic,
-		Value: bytes,
-	})
+	responses := receiver.client.ProduceSync(ctx, &kgo.Record{Value: bytes})
 
 	for _, response := range responses {
 		if response.Err != nil {
@@ -56,12 +41,6 @@ func (receiver *Producer) Send(ctx context.Context, tariff *models.Tariff) error
 			return err
 		}
 	}
-
-	return nil
-}
-
-func (receiver *Producer) Close(_ context.Context) error {
-	receiver.client.Close()
 
 	return nil
 }

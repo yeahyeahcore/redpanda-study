@@ -11,14 +11,14 @@ type WorkersDeps struct {
 }
 
 type Workers struct {
-	TariffBrokerWorker *tariff.Worker
+	TariffBroker *tariff.Worker
 }
 
 func NewWorkers(deps WorkersDeps) *Workers {
 	return &Workers{
-		TariffBrokerWorker: tariff.New(tariff.WorkerDeps{
+		TariffBroker: tariff.New(tariff.Deps{
 			Logger:              deps.Logger,
-			TariffBrokerService: deps.Services.TariffBrokerService,
+			TariffBrokerService: deps.Services.TariffBroker,
 		}),
 	}
 }
